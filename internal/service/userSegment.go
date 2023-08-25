@@ -1,0 +1,38 @@
+package service
+
+import (
+	"context"
+)
+
+type UserSegmentRepository interface {
+	CreateSegment(ctx context.Context, segmentName string) error
+	DeleteSegment(ctx context.Context, segmentName string) error
+	AddUserToSegment(ctx context.Context, userID int, segmentNamesToDelete, segmentNamesToAdd []string) error
+	GetActiveUserSegments(ctx context.Context, userID int) ([]string, error)
+}
+
+type UserSegment struct {
+	repo UserSegmentRepository
+}
+
+func NewUserSegment(repo UserSegmentRepository) *UserSegment {
+	return &UserSegment{
+		repo: repo,
+	}
+}
+
+func (u *UserSegment) CreateSegment(ctx context.Context, segmentName string) error {
+	return u.repo.CreateSegment(ctx, segmentName)
+}
+
+func (u *UserSegment) DeleteSegment(ctx context.Context, segmentName string) error {
+	return u.repo.DeleteSegment(ctx, segmentName)
+}
+
+func (u *UserSegment) AddUserToSegments(ctx context.Context, userID int, segmentNamesToDelete, segmentNamesToAdd []string) error {
+	return u.repo.AddUserToSegment(ctx, userID, segmentNamesToDelete, segmentNamesToAdd)
+}
+
+func (u *UserSegment) GetActiveUserSegments(ctx context.Context, userID int) ([]string, error) {
+	return u.repo.GetActiveUserSegments(ctx, userID)
+}
