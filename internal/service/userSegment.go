@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
+	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
 type UserSegmentRepository interface {
 	CreateSegment(ctx context.Context, segmentName string) error
 	DeleteSegment(ctx context.Context, segmentName string) error
-	AddUserToSegment(ctx context.Context, userID int, segmentNamesToDelete, segmentNamesToAdd []string) error
+	AddUserToSegment(ctx context.Context, segments models.AddUserToSegment) (*models.AddUserToSegmentResponse, error)
 	GetActiveUserSegments(ctx context.Context, userID int) ([]string, error)
 }
 
@@ -29,8 +30,9 @@ func (u *UserSegment) DeleteSegment(ctx context.Context, segmentName string) err
 	return u.repo.DeleteSegment(ctx, segmentName)
 }
 
-func (u *UserSegment) AddUserToSegments(ctx context.Context, userID int, segmentNamesToDelete, segmentNamesToAdd []string) error {
-	return u.repo.AddUserToSegment(ctx, userID, segmentNamesToDelete, segmentNamesToAdd)
+func (u *UserSegment) AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) (models.AddUserToSegmentResponse, error) {
+	res, err := u.repo.AddUserToSegment(ctx, segments)
+	return *res, err
 }
 
 func (u *UserSegment) GetActiveUserSegments(ctx context.Context, userID int) ([]string, error) {

@@ -3,6 +3,7 @@ package http_delivery
 import (
 	"context"
 	"net/http"
+	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
 //1. Create Segment
@@ -16,7 +17,7 @@ import (
 type UserSegmentService interface {
 	CreateSegment(ctx context.Context, segmentName string) error
 	DeleteSegment(ctx context.Context, segmentName string) error
-	AddUserToSegments(ctx context.Context, userID int, segmentNamesToDelete, segmentNamesToAdd []string) error
+	AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) (models.AddUserToSegmentResponse, error)
 	GetActiveUserSegments(ctx context.Context, userID int) ([]string, error)
 }
 

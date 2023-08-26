@@ -30,13 +30,12 @@ func (h *Handler) addUserToSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.userSegmentService.AddUserToSegments(r.Context(), userData.UserID, userData.SegmentsToAdd, userData.SegmentsToDelete)
+	res, err := h.userSegmentService.AddUserToSegments(r.Context(), userData)
 	if err != nil {
 		http.Error(w, "Failed to add user to segment: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	logrus.Println("user ", userData.UserID, " added to segments: ", userData.SegmentsToAdd)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) getActiveUserSegments(w http.ResponseWriter, r *http.Request) {

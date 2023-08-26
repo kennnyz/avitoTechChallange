@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"github.com/sirupsen/logrus"
-	"strings"
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
@@ -43,43 +42,63 @@ func (u *UserSegmentRepo) DeleteSegment(ctx context.Context, segmentName string)
 	return nil
 }
 
-func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, userID int, segmentNamesToDelete, segmentNamesToAdd []string) error {
+func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, segments models.AddUserToSegment) (*models.AddUserToSegmentResponse, error) {
+	response := new(models.AddUserToSegmentResponse)
+	response.UserID = segments.UserID
+
 	checkUserQuery := "SELECT id FROM users WHERE id = $1"
-	err := u.db.QueryRowContext(ctx, checkUserQuery, userID).Scan(&userID)
+	err := u.db.QueryRowContext(ctx, checkUserQuery, segments.UserID).Scan(&segments.UserID)
 	if err != nil {
-		return models.UserNotFound
+		return nil, models.UserNotFound
 	}
 
-	addQuery := "INSERT INTO user_segments (user_id, segment_name) VALUES ($1, $2)"
-	for _, segmentName := range segmentNamesToAdd {
-		_, err := u.db.ExecContext(ctx, addQuery, userID, segmentName)
+	addQuery := "INSERT INTO user_segments (user_id, segment_name) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+	checkSegmentQuery := "SELECT segment_name FROM segments WHERE segment_name = $1"
+
+	for _, segmentName := range segments.SegmentsToAdd {
+		err := u.db.QueryRowContext(ctx, checkSegmentQuery, segmentName).Scan(&segmentName)
 		if err != nil {
-			// if user already exists in segment, ignore
-			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-				// Это ошибка, которую хотим проигнорировать
+			if err == sql.ErrNoRows {
+				response.NotExistSegments = append(response.NotExistSegments, segmentName)
 				continue
 			}
-			logrus.Println("error adding user to segment: ", err)
-			return err
 		}
+
+		_, err = u.db.ExecContext(ctx, addQuery, segments.UserID, segmentName)
+		if err != nil {
+			logrus.Println("error adding user to segment: ", err)
+			return nil, err
+		}
+		response.AddedSegments = append(response.AddedSegments, segmentName)
 	}
 
 	deleteQuery := "DELETE FROM user_segments WHERE user_id = $1 AND segment_name = $2"
-	for _, segmentName := range segmentNamesToDelete {
-		_, err := u.db.ExecContext(ctx, deleteQuery, userID, segmentName)
+	for _, segmentName := range segments.SegmentsToDelete {
+		err = u.db.QueryRowContext(ctx, checkSegmentQuery, segmentName).Scan(&segmentName)
 		if err != nil {
-			return err
+			if err == sql.ErrNoRows {
+				response.NotExistSegments = append(response.NotExistSegments, segmentName)
+				continue
+			}
 		}
-	}
 
-	return nil
+		_, err = u.db.ExecContext(ctx, deleteQuery, segments.UserID, segmentName)
+		if err != nil {
+			return nil, err
+		}
+		response.DeletedSegments = append(response.DeletedSegments, segmentName)
+	}
+	return response, nil
 }
 
 func (u *UserSegmentRepo) GetActiveUserSegments(ctx context.Context, userID int) ([]string, error) {
 	checkUserQuery := "SELECT id FROM users WHERE id = $1"
 	err := u.db.QueryRowContext(ctx, checkUserQuery, userID).Scan(&userID)
 	if err != nil {
-		return nil, models.UserNotFound
+		if err == sql.ErrNoRows {
+			return nil, models.UserNotFound
+		}
+		return nil, err
 	}
 
 	query := "SELECT segment_name FROM user_segments WHERE user_id = $1"
