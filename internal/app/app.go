@@ -7,6 +7,7 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/repository"
 	"www.github.com/kennnyz/avitochallenge/internal/server"
 	service2 "www.github.com/kennnyz/avitochallenge/internal/service"
+	"www.github.com/kennnyz/avitochallenge/pkg/database"
 )
 
 func Run() {
@@ -15,7 +16,11 @@ func Run() {
 		logrus.Panic("couldn't read config")
 	}
 
-	repos, err := repository.NewRepository(cfg)
+	db, err := database.NewClient(cfg.DB.Dsn)
+	if err != nil {
+		logrus.Panic(err)
+	}
+	repos := repository.NewUserSegmentRepository(db)
 	userSegmentService := service2.NewUserSegment(repos)
 	handler := httpdelivery.NewHandler(userSegmentService)
 	httpServer := server.NewHTTPServer(cfg.ServerAddr, handler.Init())

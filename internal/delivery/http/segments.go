@@ -40,7 +40,6 @@ func (h *Handler) deleteSegment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, models.MethodNotProvideErr.Error(), 405)
 		return
 	}
-	logrus.Println("deleting segment")
 
 	body, err := io.ReadAll(r.Body)
 
@@ -51,11 +50,15 @@ func (h *Handler) deleteSegment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
 		return
 	}
+	logrus.Println("deleting segment" + segmentData.Name)
 
 	err = h.userSegmentService.DeleteSegment(r.Context(), segmentData.Name)
 	if err != nil {
+		if err == models.SegmentNotFound {
+			http.Error(w, "Segment not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Failed to delete segment "+err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	_ = json.NewEncoder(w).Encode(segmentData)

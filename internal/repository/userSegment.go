@@ -1,4 +1,4 @@
-package postgres
+package repository
 
 import (
 	"context"
@@ -11,22 +11,15 @@ type UserSegmentRepo struct {
 	db *sql.DB
 }
 
-func NewRepository(db *sql.DB) *UserSegmentRepo {
+func NewUserSegmentRepository(db *sql.DB) *UserSegmentRepo {
 	return &UserSegmentRepo{
 		db: db,
 	}
 }
 
 func (u *UserSegmentRepo) CreateSegment(ctx context.Context, segmentName string) error {
-	checkQuery := "SELECT segment_name FROM segments WHERE segment_name = $1"
-	err := u.db.QueryRowContext(ctx, checkQuery, segmentName).Scan(&segmentName)
-	if err == nil {
-		logrus.Println("segment already exists")
-		return nil
-	}
-
-	insertQuery := "INSERT INTO segments (segment_name) VALUES ($1)"
-	_, err = u.db.ExecContext(ctx, insertQuery, segmentName)
+	insertQuery := "INSERT INTO segments (segment_name) VALUES ($1) ON CONFLICT DO NOTHING"
+	_, err := u.db.ExecContext(ctx, insertQuery, segmentName)
 	if err != nil {
 		return err
 	}
@@ -35,9 +28,21 @@ func (u *UserSegmentRepo) CreateSegment(ctx context.Context, segmentName string)
 
 func (u *UserSegmentRepo) DeleteSegment(ctx context.Context, segmentName string) error {
 	deleteQuery := "DELETE FROM segments WHERE segment_name = $1"
-	_, err := u.db.ExecContext(ctx, deleteQuery, segmentName)
+	res, err := u.db.ExecContext(ctx, deleteQuery, segmentName)
 	if err != nil {
+		logrus.Println("Error executing delete query:", err)
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		logrus.Println("Error getting rows affected:", err)
+		return err
+	}
+
+	if rowsAffected == 0 {
+		logrus.Println("Segment not found:", segmentName)
+		return models.SegmentNotFound
 	}
 	return nil
 }
@@ -49,6 +54,7 @@ func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, segments models.
 	checkUserQuery := "SELECT id FROM users WHERE id = $1"
 	err := u.db.QueryRowContext(ctx, checkUserQuery, segments.UserID).Scan(&segments.UserID)
 	if err != nil {
+		logrus.Println("Error checking user:", err)
 		return nil, models.UserNotFound
 	}
 
@@ -56,12 +62,20 @@ func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, segments models.
 	checkSegmentQuery := "SELECT segment_name FROM segments WHERE segment_name = $1"
 
 	for _, segmentName := range segments.SegmentsToAdd {
-		err := u.db.QueryRowContext(ctx, checkSegmentQuery, segmentName).Scan(&segmentName)
+		res, err := u.db.ExecContext(ctx, checkSegmentQuery, segmentName)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				response.NotExistSegments = append(response.NotExistSegments, segmentName)
-				continue
-			}
+			logrus.Println("error checking segment:", err)
+			return nil, err
+		}
+
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+
+		if rowsAffected == 0 {
+			response.NotExistSegments = append(response.NotExistSegments, segmentName)
+			continue
 		}
 
 		_, err = u.db.ExecContext(ctx, addQuery, segments.UserID, segmentName)
@@ -74,12 +88,19 @@ func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, segments models.
 
 	deleteQuery := "DELETE FROM user_segments WHERE user_id = $1 AND segment_name = $2"
 	for _, segmentName := range segments.SegmentsToDelete {
-		err = u.db.QueryRowContext(ctx, checkSegmentQuery, segmentName).Scan(&segmentName)
+		res, err := u.db.ExecContext(ctx, checkSegmentQuery, segmentName)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				response.NotExistSegments = append(response.NotExistSegments, segmentName)
-				continue
-			}
+			return nil, err
+		}
+
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+
+		if rowsAffected == 0 {
+			response.NotExistSegments = append(response.NotExistSegments, segmentName)
+			continue
 		}
 
 		_, err = u.db.ExecContext(ctx, deleteQuery, segments.UserID, segmentName)

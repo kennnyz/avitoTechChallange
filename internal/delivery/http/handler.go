@@ -6,14 +6,6 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
-//1. Create Segment
-//2. Update segment -
-//3. Delete Segment
-//4. Add user to segment
-//5. Delete user from segment
-//6. Get users by id from segment
-//7. get all users
-
 type UserSegmentService interface {
 	CreateSegment(ctx context.Context, segmentName string) error
 	DeleteSegment(ctx context.Context, segmentName string) error

@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  db:
+    env_file:
+      - .env
+    image: postgres
+    environment:
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_DB: ${PGDATABASE}
+    ports:
+      - 5432:5432
+    networks:
+      - my-network
+  user-segment:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    environment:
+      SERVER_ADDR: ${SERVER_ADDR}
+      DB_DSN: ${DB_DSN}
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    networks:
+      - my-network
+
+
+networks:
+  my-network:
