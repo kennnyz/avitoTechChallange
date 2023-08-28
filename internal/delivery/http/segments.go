@@ -8,6 +8,17 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
+// @Summary Create segment
+// @Description Create segment
+// @Tags segments
+// @Accept json
+// @Produce json
+// @Param input body models.Segment true "segment info"
+// @Success 200 {object} models.ResponseMessage
+// @Failure 400 {object} models.ResponseMessage
+// @Failure 500 {object} models.ResponseMessage
+// @Failure default {object} models.ResponseMessage
+// @Router /create-segment [post]
 func (h *Handler) createSegment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -51,6 +62,17 @@ func (h *Handler) createSegment(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(models.SucceedMessage)
 }
 
+// @Summary Delete segment
+// @Description Delete segment
+// @Tags segments
+// @Accept json
+// @Produce json
+// @Param input body models.Segment true "segment info"
+// @Success 200 {object} models.ResponseMessage
+// @Failure 400 {object} models.ResponseMessage
+// @Failure 500 {object} models.ResponseMessage
+// @Failure default {object} models.ResponseMessage
+// @Router /delete-segment [delete]
 func (h *Handler) deleteSegment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)

@@ -2,7 +2,10 @@ package http_delivery
 
 import (
 	"context"
+	"github.com/go-chi/chi/v5"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"net/http"
+	_ "www.github.com/kennnyz/avitochallenge/docs"
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
@@ -27,12 +30,13 @@ func NewHandler(userSegmentService UserSegmentService) *Handler {
 }
 
 func (h *Handler) Init() http.Handler {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mux.HandleFunc("/create-segment", h.createSegment)
-	mux.HandleFunc("/delete-segment", h.deleteSegment)
-	mux.HandleFunc("/add-user-to-segment", h.addUserToSegment)
-	mux.HandleFunc("/active-user-segments", h.getActiveUserSegments)
+	r.Post("/create-segment", h.createSegment)
+	r.Delete("/delete-segment", h.deleteSegment)
+	r.Post("/add-user-to-segment", h.addUserToSegment)
+	r.Get("/active-user-segments", h.getActiveUserSegments)
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:8080/swagger/doc.json"))) // TODO
 
-	return mux
+	return r
 }

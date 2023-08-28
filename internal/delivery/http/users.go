@@ -8,6 +8,17 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
+// @Summary Add To User Segments And Delete From User Segments
+// @Description Add To User Segments And Delete From User Segments
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param input body models.AddUserToSegment true "user info"
+// @Success 200 {object} models.ResponseMessage
+// @Failure 400 {object} models.ResponseMessage
+// @Failure 500 {object} models.ResponseMessage
+// @Failure default {object} models.ResponseMessage
+// @Router /add-user-to-segment [post]
 func (h *Handler) addUserToSegment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -48,6 +59,17 @@ func (h *Handler) addUserToSegment(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Get Active User Segments
+// @Description Get Active User Segments
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param input body models.User true "user info"
+// @Success 200 {object} []string
+// @Failure 400 {object} models.ResponseMessage
+// @Failure 500 {object} models.ResponseMessage
+// @Failure default {object} models.ResponseMessage
+// @Router /active-user-segments [get]
 func (h *Handler) getActiveUserSegments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
