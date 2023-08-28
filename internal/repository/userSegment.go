@@ -42,7 +42,7 @@ func (u *UserSegmentRepo) DeleteSegment(ctx context.Context, segmentName string)
 
 	if rowsAffected == 0 {
 		logrus.Println("Segment not found:", segmentName)
-		return models.SegmentNotFound
+		return models.SegmentNotFoundErr
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, segments models.
 	err := u.db.QueryRowContext(ctx, checkUserQuery, segments.UserID).Scan(&segments.UserID)
 	if err != nil {
 		logrus.Println("Error checking user:", err)
-		return nil, models.UserNotFound
+		return nil, models.UserNotFoundErr
 	}
 
 	addQuery := "INSERT INTO user_segments (user_id, segment_name) VALUES ($1, $2) ON CONFLICT DO NOTHING"
@@ -117,7 +117,7 @@ func (u *UserSegmentRepo) GetActiveUserSegments(ctx context.Context, userID int)
 	err := u.db.QueryRowContext(ctx, checkUserQuery, userID).Scan(&userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, models.UserNotFound
+			return nil, models.UserNotFoundErr
 		}
 		return nil, err
 	}

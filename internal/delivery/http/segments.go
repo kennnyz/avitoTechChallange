@@ -10,56 +10,93 @@ import (
 
 func (h *Handler) createSegment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, models.MethodNotProvideErr.Error(), 405)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: models.MethodNotProvideErr.Error()})
 		return
 	}
 	logrus.Println("creating segment")
 
 	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
 
 	var segmentData models.Segment
 	err = json.Unmarshal(body, &segmentData)
 	if err != nil {
 		logrus.Println("failed to decode JSON data")
-		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: "invalid json"})
+		return
+	}
+
+	err = h.validateSegment(&segmentData)
+	if err != nil {
+		logrus.Println("failed to validate segment ", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: err.Error()})
 		return
 	}
 
 	err = h.userSegmentService.CreateSegment(r.Context(), segmentData.Name)
 	if err != nil {
-		http.Error(w, "Failed to create segment "+err.Error(), http.StatusInternalServerError)
+		m := models.ResponseMessage{Message: err.Error()}
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(m)
 		return
 	}
 	logrus.Println("segment created: ", segmentData.Name)
 
-	_ = json.NewEncoder(w).Encode(segmentData)
+	_ = json.NewEncoder(w).Encode(models.SucceedMessage)
 }
 
 func (h *Handler) deleteSegment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, models.MethodNotProvideErr.Error(), 405)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: models.MethodNotProvideErr.Error()})
 		return
 	}
 
 	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
 
 	var segmentData models.Segment
 	err = json.Unmarshal(body, &segmentData)
 	if err != nil {
 		logrus.Println("failed to decode JSON data")
-		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: "invalid json"})
 		return
 	}
+
+	err = h.validateSegment(&segmentData)
+	if err != nil {
+		logrus.Println("failed to validate segment ", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: err.Error()})
+		return
+	}
+
 	logrus.Println("deleting segment" + segmentData.Name)
 
 	err = h.userSegmentService.DeleteSegment(r.Context(), segmentData.Name)
 	if err != nil {
-		if err == models.SegmentNotFound {
-			http.Error(w, "Segment not found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "Failed to delete segment "+err.Error(), http.StatusInternalServerError)
+		m := models.ResponseMessage{Message: err.Error()}
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(m)
+		return
 	}
 
-	_ = json.NewEncoder(w).Encode(segmentData)
+	_ = json.NewEncoder(w).Encode(models.SucceedMessage)
+}
+
+func (h *Handler) validateSegment(in *models.Segment) error {
+	if in.Name == "" {
+		return models.SegmentNameEmptyErr
+	}
+	return nil
 }

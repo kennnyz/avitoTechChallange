@@ -6,10 +6,12 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/mock_hash.go
+
 type UserSegmentService interface {
 	CreateSegment(ctx context.Context, segmentName string) error
 	DeleteSegment(ctx context.Context, segmentName string) error
-	AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) (models.AddUserToSegmentResponse, error)
+	AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) (*models.AddUserToSegmentResponse, error)
 	GetActiveUserSegments(ctx context.Context, userID int) ([]string, error)
 }
 

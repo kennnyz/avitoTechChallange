@@ -1,5 +1,11 @@
 package models
 
+var (
+	SucceedMessage = ResponseMessage{
+		Message: "success",
+	}
+)
+
 type AddUserToSegment struct {
 	UserID           int      `json:"id"`
 	SegmentsToAdd    []string `json:"segments_to_add"`
@@ -19,4 +25,8 @@ type AddUserToSegmentResponse struct {
 	AddedSegments    []string `json:"added_segments"`
 	DeletedSegments  []string `json:"deleted_segments"`
 	NotExistSegments []string `json:"not_exist_segments"`
+}
+
+type ResponseMessage struct {
+	Message string `json:"message"`
 }

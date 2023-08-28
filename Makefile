@@ -10,7 +10,7 @@ createdb:
 	docker run --name avitodb -e POSTGRES_DB=$(PGDATABASE) -e POSTGRES_USER=$(PGUSER) -e POSTGRES_PASSWORD=$(PGPASSWORD) -p 5432:5432 -d postgres
 
 run-docker:
-	docker-compose up 
+	docker-compose up
 
 run-up:
 	go run cmd/main.go
@@ -18,4 +18,5 @@ run-up:
 test:
 	go test  ./...
 
-.PHONY: migrate-down migrate-up run-up
+
+.PHONY: migrate-down migrate-up run-up test createdb run-docker
