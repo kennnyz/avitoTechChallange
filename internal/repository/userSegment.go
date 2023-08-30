@@ -2,16 +2,17 @@ package repository
 
 import (
 	"context"
-	"database/sql"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sirupsen/logrus"
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
 type UserSegmentRepo struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
-func NewUserSegmentRepository(db *sql.DB) *UserSegmentRepo {
+func NewUserSegmentRepository(db *pgxpool.Pool) *UserSegmentRepo {
 	return &UserSegmentRepo{
 		db: db,
 	}
@@ -19,7 +20,7 @@ func NewUserSegmentRepository(db *sql.DB) *UserSegmentRepo {
 
 func (u *UserSegmentRepo) CreateSegment(ctx context.Context, segmentName string) error {
 	insertQuery := "INSERT INTO segments (segment_name) VALUES ($1) ON CONFLICT DO NOTHING"
-	_, err := u.db.ExecContext(ctx, insertQuery, segmentName)
+	_, err := u.db.Exec(ctx, insertQuery, segmentName)
 	if err != nil {
 		return err
 	}
@@ -27,103 +28,127 @@ func (u *UserSegmentRepo) CreateSegment(ctx context.Context, segmentName string)
 }
 
 func (u *UserSegmentRepo) DeleteSegment(ctx context.Context, segmentName string) error {
+	userInSegment := []models.UserInSegment{}
+
+	getUsers := "SELECT user_id, segment_name FROM user_segments WHERE segment_name = $1"
+	rows, err := u.db.Query(ctx, getUsers, segmentName)
+	if err != nil {
+		logrus.Println("Error executing get query:", err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := models.UserInSegment{}
+		err := rows.Scan(&user.UserID, &user.Segment)
+		if err != nil {
+			logrus.Println("Error scanning row:", err)
+			return err
+		}
+		userInSegment = append(userInSegment, user)
+	}
+
 	deleteQuery := "DELETE FROM segments WHERE segment_name = $1"
-	res, err := u.db.ExecContext(ctx, deleteQuery, segmentName)
+	_, err = u.db.Exec(ctx, deleteQuery, segmentName)
 	if err != nil {
 		logrus.Println("Error executing delete query:", err)
 		return err
 	}
 
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		logrus.Println("Error getting rows affected:", err)
-		return err
+	batch := &pgx.Batch{}
+	for _, user := range userInSegment {
+		batch.Queue("INSERT INTO history (user_id, segment_name, action_type) VALUES ($1, $2, $3)", user.UserID, user.Segment, "deleted")
 	}
+	results := u.db.SendBatch(ctx, batch)
+	results.Close()
 
-	if rowsAffected == 0 {
-		logrus.Println("Segment not found:", segmentName)
-		return models.SegmentNotFoundErr
-	}
 	return nil
 }
 
-func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, segments models.AddUserToSegment) (*models.AddUserToSegmentResponse, error) {
-	response := new(models.AddUserToSegmentResponse)
-	response.UserID = segments.UserID
-
-	checkUserQuery := "SELECT id FROM users WHERE id = $1"
-	err := u.db.QueryRowContext(ctx, checkUserQuery, segments.UserID).Scan(&segments.UserID)
-	if err != nil {
-		logrus.Println("Error checking user:", err)
-		return nil, models.UserNotFoundErr
-	}
+func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, userID int, segments []string) ([]string, error) {
+	res := []string{}
 
 	addQuery := "INSERT INTO user_segments (user_id, segment_name) VALUES ($1, $2) ON CONFLICT DO NOTHING"
-	checkSegmentQuery := "SELECT segment_name FROM segments WHERE segment_name = $1"
 
-	for _, segmentName := range segments.SegmentsToAdd {
-		res, err := u.db.ExecContext(ctx, checkSegmentQuery, segmentName)
+	batch := &pgx.Batch{}
+	for _, segmentName := range segments {
+		batch.Queue(addQuery, userID, segmentName)
+	}
+	results := u.db.SendBatch(ctx, batch)
+	defer results.Close()
+
+	for _, segmentName := range segments {
+		rw, err := results.Exec()
 		if err != nil {
-			logrus.Println("error checking segment:", err)
+			logrus.Println("Error adding user to segment:", err)
+			check := u.CheckSegment(ctx, segmentName)
+			if check != nil {
+				return nil, check
+			}
 			return nil, err
 		}
-
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			return nil, err
-		}
-
-		if rowsAffected == 0 {
-			response.NotExistSegments = append(response.NotExistSegments, segmentName)
+		if rw.RowsAffected() == 0 {
+			err = u.CheckSegment(ctx, segmentName)
+			if err != nil {
+				return nil, err
+			}
 			continue
 		}
 
-		_, err = u.db.ExecContext(ctx, addQuery, segments.UserID, segmentName)
-		if err != nil {
-			logrus.Println("error adding user to segment: ", err)
-			return nil, err
-		}
-		response.AddedSegments = append(response.AddedSegments, segmentName)
+		res = append(res, segmentName)
 	}
 
+	batch = &pgx.Batch{}
+	for _, segmentName := range res {
+		batch.Queue("INSERT INTO history (user_id, segment_name, action_type) VALUES ($1, $2, $3)", userID, segmentName, "add")
+	}
+	u.db.SendBatch(ctx, batch)
+
+	return res, nil
+}
+
+func (u *UserSegmentRepo) DeleteUserFromSegments(ctx context.Context, userId int, segments []string) ([]string, error) {
+	history := []string{}
 	deleteQuery := "DELETE FROM user_segments WHERE user_id = $1 AND segment_name = $2"
-	for _, segmentName := range segments.SegmentsToDelete {
-		res, err := u.db.ExecContext(ctx, checkSegmentQuery, segmentName)
+
+	batch := &pgx.Batch{}
+	for _, segmentName := range segments {
+		batch.Queue(deleteQuery, userId, segmentName)
+	}
+	results := u.db.SendBatch(ctx, batch)
+	defer results.Close()
+
+	for _, segmentName := range segments {
+		rw, err := results.Exec()
 		if err != nil {
+			logrus.Println("Error removing user from segment:", err)
 			return nil, err
 		}
-
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			return nil, err
-		}
-
-		if rowsAffected == 0 {
-			response.NotExistSegments = append(response.NotExistSegments, segmentName)
+		if rw.RowsAffected() == 0 {
 			continue
 		}
+		history = append(history, segmentName)
+	}
 
-		_, err = u.db.ExecContext(ctx, deleteQuery, segments.UserID, segmentName)
+	batch = &pgx.Batch{}
+	for _, segmentName := range history {
+		batch.Queue("INSERT INTO history (user_id, segment_name, action_type) VALUES ($1, $2, $3)", userId, segmentName, "delete")
+	}
+	results = u.db.SendBatch(ctx, batch)
+	for _, segmentName := range history {
+		_, err := results.Exec()
 		if err != nil {
+			logrus.Println("Error adding to history:", err, " segment: ", segmentName)
 			return nil, err
 		}
-		response.DeletedSegments = append(response.DeletedSegments, segmentName)
 	}
-	return response, nil
+
+	return segments, nil
 }
 
 func (u *UserSegmentRepo) GetActiveUserSegments(ctx context.Context, userID int) ([]string, error) {
-	checkUserQuery := "SELECT id FROM users WHERE id = $1"
-	err := u.db.QueryRowContext(ctx, checkUserQuery, userID).Scan(&userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, models.UserNotFoundErr
-		}
-		return nil, err
-	}
-
 	query := "SELECT segment_name FROM user_segments WHERE user_id = $1"
-	rows, err := u.db.QueryContext(ctx, query, userID)
+	rows, err := u.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -139,4 +164,24 @@ func (u *UserSegmentRepo) GetActiveUserSegments(ctx context.Context, userID int)
 		segmentNames = append(segmentNames, segmentName)
 	}
 	return segmentNames, nil
+}
+
+func (u *UserSegmentRepo) CheckUser(ctx context.Context, userID int) error {
+	checkUserQuery := "SELECT id FROM users WHERE id = $1"
+	err := u.db.QueryRow(ctx, checkUserQuery, userID).Scan(&userID)
+	if err != nil {
+		logrus.Println("Error checking user:", err)
+		return models.UserNotFoundErr
+	}
+	return nil
+}
+
+func (u *UserSegmentRepo) CheckSegment(ctx context.Context, segmentName string) error {
+	checkSegmentQuery := "SELECT segment_name FROM segments WHERE segment_name = $1"
+	err := u.db.QueryRow(ctx, checkSegmentQuery, segmentName).Scan(&segmentName)
+	if err != nil {
+		logrus.Println("Error checking segment:", err)
+		return models.SegmentNotFoundErr(segmentName)
+	}
+	return nil
 }

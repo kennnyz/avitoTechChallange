@@ -1,0 +1,176 @@
+basePath: /
+definitions:
+  models.AddUserToSegment:
+    properties:
+      segments_to_add:
+        items:
+          type: string
+        type: array
+      segments_to_delete:
+        items:
+          type: string
+        type: array
+      userid:
+        type: integer
+    type: object
+  models.ResponseMessage:
+    properties:
+      message:
+        type: string
+    type: object
+  models.Segment:
+    properties:
+      name:
+        type: string
+    type: object
+  models.User:
+    properties:
+      userid:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample server for Avito Challenge API.
+  title: Avito Challenge API
+  version: v1
+paths:
+  /active-user-segments:
+    get:
+      consumes:
+      - application/json
+      description: Get Active User Segments
+      parameters:
+      - description: user info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+      summary: Get Active User Segments
+      tags:
+      - users
+  /add-user-to-segment:
+    post:
+      consumes:
+      - application/json
+      description: Add To User Segments And Delete From User Segments
+      parameters:
+      - description: user info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddUserToSegment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+      summary: Add To User Segments And Delete From User Segments
+      tags:
+      - users
+  /create-segment:
+    post:
+      consumes:
+      - application/json
+      description: Create segment
+      parameters:
+      - description: segment info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Segment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+      summary: Create segment
+      tags:
+      - segments
+  /delete-segment:
+    delete:
+      consumes:
+      - application/json
+      description: Delete segment
+      parameters:
+      - description: segment info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Segment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ResponseMessage'
+      summary: Delete segment
+      tags:
+      - segments
+swagger: "2.0"

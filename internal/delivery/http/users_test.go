@@ -30,14 +30,14 @@ func TestAddUserToSegment(t *testing.T) {
 			name:   "success",
 			mockBehavior: func(s *mock_http_delivery.MockUserSegmentService) {
 				s.EXPECT().AddUserToSegments(gomock.Any(), gomock.Any()).Return(&models.AddUserToSegmentResponse{
-					UserID:           1000,
-					AddedSegments:    []string{"segment1", "segment2"},
-					DeletedSegments:  []string{"segment3"},
-					NotExistSegments: nil,
+					UserID:              1000,
+					AddedSegments:       []string{"segment1", "segment2"},
+					DeletedSegments:     []string{"segment3"},
+					NotAffectedSegments: nil,
 				}, nil)
 			},
 			expectedStatusCode: 200,
-			expectedResponse:   `{"id":1000,"added_segments":["segment1","segment2"],"deleted_segments":["segment3"],"not_exist_segments":null}`,
+			expectedResponse:   `{"id":1000,"added_segments":["segment1","segment2"],"deleted_segments":["segment3"],"not_affected_segments":null}`,
 			expectedBody:       `{"id":1000,"segments_to_add":["segment1","segment2"],"segments_to_delete":["segment3"]}`,
 			expectedMethod:     http.MethodPost,
 			path:               "/add-user-to-segment",

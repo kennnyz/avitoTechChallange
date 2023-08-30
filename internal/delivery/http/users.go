@@ -42,7 +42,7 @@ func (h *Handler) addUserToSegment(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: "invalid json"})
 		return
 	}
-	if userData.UserID < 0 {
+	if userData.UserID <= 0 {
 		logrus.Println("bad user id")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: "bad user id"})

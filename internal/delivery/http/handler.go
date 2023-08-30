@@ -29,14 +29,14 @@ func NewHandler(userSegmentService UserSegmentService) *Handler {
 	}
 }
 
-func (h *Handler) Init() http.Handler {
+func (h *Handler) Init(swaggerUrl string) http.Handler {
 	r := chi.NewRouter()
 
 	r.Post("/create-segment", h.createSegment)
 	r.Delete("/delete-segment", h.deleteSegment)
 	r.Post("/add-user-to-segment", h.addUserToSegment)
 	r.Get("/active-user-segments", h.getActiveUserSegments)
-	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:8080/swagger/doc.json"))) // TODO
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(swaggerUrl)))
 
 	return r
 }

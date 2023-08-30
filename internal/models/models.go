@@ -7,7 +7,7 @@ var (
 )
 
 type AddUserToSegment struct {
-	UserID           int      `json:"id"`
+	UserID           int      `json:"userid"`
 	SegmentsToAdd    []string `json:"segments_to_add"`
 	SegmentsToDelete []string `json:"segments_to_delete"`
 }
@@ -21,12 +21,16 @@ type User struct {
 }
 
 type AddUserToSegmentResponse struct {
-	UserID           int      `json:"id"`
-	AddedSegments    []string `json:"added_segments"`
-	DeletedSegments  []string `json:"deleted_segments"`
-	NotExistSegments []string `json:"not_exist_segments"`
+	UserID          int      `json:"userid"`
+	AddedSegments   []string `json:"added_segments"`
+	DeletedSegments []string `json:"deleted_segments"`
 }
 
 type ResponseMessage struct {
 	Message string `json:"message"`
+}
+
+type UserInSegment struct {
+	UserID  int    `json:"userid"`
+	Segment string `json:"segment"`
 }

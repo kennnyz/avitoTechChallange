@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
 	"www.github.com/kennnyz/avitochallenge/internal/config"
 	httpdelivery "www.github.com/kennnyz/avitochallenge/internal/delivery/http"
@@ -16,14 +17,19 @@ func Run() {
 		logrus.Panic("couldn't read config")
 	}
 
-	db, err := database.NewClient(cfg.DB.Dsn)
+	db, err := database.NewPgxClient(cfg.DB.Dsn)
 	if err != nil {
 		logrus.Panic(err)
 	}
+	err = db.Ping(context.Background())
+	if err != nil {
+		logrus.Panic(err)
+	}
+
 	repos := repository.NewUserSegmentRepository(db)
 	userSegmentService := service2.NewUserSegment(repos)
 	handler := httpdelivery.NewHandler(userSegmentService)
-	httpServer := server.NewHTTPServer(cfg.ServerAddr, handler.Init())
+	httpServer := server.NewHTTPServer(cfg.ServerAddr, handler.Init(cfg.SwaggerURL))
 
 	logrus.Println("Server is listening..." + cfg.ServerAddr)
 	err = httpServer.Run()
