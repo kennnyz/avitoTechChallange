@@ -46,11 +46,7 @@ func Run() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
-	select {
-	case <-interrupt:
-		logrus.Println("Shutting down...")
-	}
-
+	<-interrupt
 	err = httpServer.Shutdown()
 	if err != nil {
 		logrus.Panic("Couldn't shutdown server")

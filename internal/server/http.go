@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -25,5 +26,5 @@ func (s *Server) Run() error {
 
 func (s *Server) Shutdown() error {
 	logrus.Println("shutting down server at ", s.httpServer.Addr)
-	return s.httpServer.Shutdown(nil)
+	return s.httpServer.Shutdown(context.TODO())
 }
