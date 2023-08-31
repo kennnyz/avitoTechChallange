@@ -53,7 +53,7 @@ func (h *Handler) getHistoryLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileURL := fmt.Sprintf("http://%s/tmp/%s-%s.csv", r.Host, historyDate.Year, historyDate.Month)
+	fileURL := fmt.Sprintf("http://%s/public/%s-%s.csv", r.Host, historyDate.Year, historyDate.Month)
 	_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: fileURL})
 
 }
