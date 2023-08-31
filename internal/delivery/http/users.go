@@ -2,6 +2,7 @@ package http_delivery
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -51,6 +52,13 @@ func (h *Handler) addUserToSegment(w http.ResponseWriter, r *http.Request) {
 
 	err = h.userSegmentService.AddUserToSegments(r.Context(), userData)
 	if err != nil {
+		if errors.Is(err, models.UserNotFoundErr) {
+			m := models.ResponseMessage{Message: err.Error()}
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(m)
+			return
+		}
+
 		m := models.ResponseMessage{Message: err.Error()}
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(m)

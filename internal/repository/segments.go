@@ -59,7 +59,7 @@ func (u *UserSegmentRepo) CheckSegment(ctx context.Context, segmentName string) 
 	err := u.db.QueryRow(ctx, checkSegmentQuery, segmentName).Scan(&segmentName)
 	if err != nil {
 		logrus.Println("Error checking segment:", err)
-		return models.SegmentNotFoundErr(segmentName)
+		return models.NewSegmentNotFoundErr(segmentName)
 	}
 	return nil
 }

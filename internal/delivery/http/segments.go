@@ -2,6 +2,7 @@ package http_delivery
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -107,6 +108,13 @@ func (h *Handler) deleteSegment(w http.ResponseWriter, r *http.Request) {
 
 	err = h.userSegmentService.DeleteSegment(r.Context(), segmentData.Name)
 	if err != nil {
+		if errors.Is(err, models.SegmentNotFoundErr) {
+			w.WriteHeader(http.StatusBadRequest)
+			m := models.ResponseMessage{Message: err.Error()}
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(m)
+			return
+		}
 		m := models.ResponseMessage{Message: err.Error()}
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(m)

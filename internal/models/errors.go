@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -9,8 +10,9 @@ var (
 	MethodNotProvideErr = errors.New("method not provided")
 	SegmentNameEmptyErr = errors.New("segment name is empty")
 	NoDataErr           = errors.New("no data")
+	SegmentNotFoundErr  = errors.New("segment not found")
 )
 
-func SegmentNotFoundErr(segmentName string) error {
-	return errors.New("segment " + segmentName + " not found")
+func NewSegmentNotFoundErr(segmentName string) error {
+	return fmt.Errorf("%w, segment name %s", SegmentNotFoundErr, segmentName)
 }

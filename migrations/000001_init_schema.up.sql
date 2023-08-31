@@ -22,7 +22,3 @@ CREATE TABLE IF NOT EXISTS history (
                                        action_timestamp timestamp DEFAULT now()
 );
 
-
-INSERT INTO users (id) VALUES (1000), (1002), (1003), (1004), (1005), (1006) ON CONFLICT DO NOTHING;
-
-INSERT INTO segments (segment_name) VALUES ('segment1'), ('segment2'), ('segment3'), ('segment4'), ('segment5'), ('segment6'), ('segment7'), ('segment8'), ('segment9'), ('segment10') ON CONFLICT DO NOTHING;
