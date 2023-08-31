@@ -32,7 +32,7 @@ func Run() {
 
 	// init dependencies
 	repos := repository.NewUserSegmentRepository(db)
-	userSegmentService := service2.NewUserSegment(repos, "tmp/")
+	userSegmentService := service2.NewUserSegment(repos, "public/")
 	handler := httpdelivery.NewHandler(userSegmentService)
 	httpServer := server.NewHTTPServer(cfg.ServerAddr, handler.Init(cfg.SwaggerURL))
 

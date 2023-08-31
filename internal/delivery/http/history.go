@@ -63,7 +63,7 @@ func (h *Handler) getHistoryLink(w http.ResponseWriter, r *http.Request) {
 // @Tags history
 // @Success 200 "CSV file attachment"
 // @Failure 500 "Internal server error"
-// @Router /tmp/{file_name} [get]
+// @Router /public/{file_name} [get]
 func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -72,7 +72,7 @@ func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filename := path.Base(r.URL.Path)
-	filePath := filepath.Join("tmp/", filename)
+	filePath := filepath.Join("public/", filename)
 
 	file, err := os.Open(filePath)
 	if err != nil {

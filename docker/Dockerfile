@@ -20,6 +20,6 @@ WORKDIR /app
 COPY --from=builder /app/main /app/main
 
 # create dirrectory for static files
-RUN mkdir /app/tmp
+RUN mkdir /app/public
 
 CMD ["/app/main"]
