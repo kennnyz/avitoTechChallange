@@ -61,11 +61,8 @@ func (h *Handler) getHistoryLink(w http.ResponseWriter, r *http.Request) {
 // @Summary Get history file
 // @Description Get history file
 // @Tags history
-// @Produce csv
 // @Success 200 "CSV file attachment"
-// @Failure 400 {object} models.ResponseMessage "Bad request"
-// @Failure 405 {object} models.ResponseMessage "Method not allowed"
-// @Failure 500 {object} models.ResponseMessage "Internal server error"
+// @Failure 500 "Internal server error"
 // @Router /tmp/{file_name} [get]
 func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
