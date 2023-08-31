@@ -92,3 +92,18 @@ func (mr *MockUserSegmentServiceMockRecorder) GetActiveUserSegments(ctx, userID 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveUserSegments", reflect.TypeOf((*MockUserSegmentService)(nil).GetActiveUserSegments), ctx, userID)
 }
+
+// GetHistoryFile mocks base method.
+func (m *MockUserSegmentService) GetHistoryFile(ctx context.Context, year, month string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHistoryFile", ctx, year, month)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHistoryFile indicates an expected call of GetHistoryFile.
+func (mr *MockUserSegmentServiceMockRecorder) GetHistoryFile(ctx, year, month interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoryFile", reflect.TypeOf((*MockUserSegmentService)(nil).GetHistoryFile), ctx, year, month)
+}

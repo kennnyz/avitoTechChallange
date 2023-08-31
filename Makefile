@@ -16,7 +16,7 @@ run-up:
 	go run cmd/main.go
 
 test:
-	go test  ./...
+	go test  ./... -cover
 
 
 .PHONY: migrate-down migrate-up run-up test createdb run-docker

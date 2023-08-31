@@ -21,6 +21,8 @@ services:
     environment:
       SERVER_ADDR: ${SERVER_ADDR}
       DB_DSN: ${DB_DSN}
+      HISTORY_FILES_PATH: tmp/
+      SWAGGER_URL: ${SWAGGER_URL}
     ports:
       - 8080:8080
     depends_on:

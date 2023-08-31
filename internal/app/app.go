@@ -27,7 +27,7 @@ func Run() {
 	}
 
 	repos := repository.NewUserSegmentRepository(db)
-	userSegmentService := service2.NewUserSegment(repos)
+	userSegmentService := service2.NewUserSegment(repos, "tmp/")
 	handler := httpdelivery.NewHandler(userSegmentService)
 	httpServer := server.NewHTTPServer(cfg.ServerAddr, handler.Init(cfg.SwaggerURL))
 

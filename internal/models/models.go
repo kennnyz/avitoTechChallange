@@ -34,3 +34,15 @@ type UserInSegment struct {
 	UserID  int    `json:"userid"`
 	Segment string `json:"segment"`
 }
+
+type GetHistoryRequest struct {
+	Year  string `json:"year"`
+	Month string `json:"month"`
+}
+
+type UserHistory struct {
+	UserID  int    `json:"userid"`
+	Segment string `json:"segment"`
+	Action  string `json:"action"`
+	Date    string `json:"date"`
+}

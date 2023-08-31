@@ -16,6 +16,7 @@ type UserSegmentService interface {
 	DeleteSegment(ctx context.Context, segmentName string) error
 	AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) (*models.AddUserToSegmentResponse, error)
 	GetActiveUserSegments(ctx context.Context, userID int) ([]string, error)
+	GetHistoryFile(ctx context.Context, year, month string) (string, error)
 }
 
 type Handler struct {
@@ -36,6 +37,8 @@ func (h *Handler) Init(swaggerUrl string) http.Handler {
 	r.Delete("/delete-segment", h.deleteSegment)
 	r.Post("/add-user-to-segment", h.addUserToSegment)
 	r.Get("/active-user-segments", h.getActiveUserSegments)
+	r.Get("/get-history-file", h.getHistoryFile)
+	r.Get("/tmp/*", h.getFile)
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(swaggerUrl)))
 
 	return r
