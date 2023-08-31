@@ -12,8 +12,8 @@ import (
 type UserSegmentRepository interface {
 	CreateSegment(ctx context.Context, segmentName string) error
 	DeleteSegment(ctx context.Context, segmentName string) error
-	AddUserToSegment(ctx context.Context, userID int, segments []string) ([]string, error)
-	DeleteUserFromSegments(ctx context.Context, userId int, segments []string) ([]string, error)
+	AddUserToSegment(ctx context.Context, userID int, segments []string) error
+	DeleteUserFromSegments(ctx context.Context, userId int, segments []string) error
 	GetActiveUserSegments(ctx context.Context, userID int) ([]string, error)
 	CheckSegment(ctx context.Context, segmentName string) error
 	CheckUser(ctx context.Context, userID int) error
@@ -45,28 +45,23 @@ func (u *UserSegment) DeleteSegment(ctx context.Context, segmentName string) err
 	return u.repo.DeleteSegment(ctx, segmentName)
 }
 
-func (u *UserSegment) AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) (*models.AddUserToSegmentResponse, error) {
+func (u *UserSegment) AddUserToSegments(ctx context.Context, segments models.AddUserToSegment) error {
 	err := u.repo.CheckUser(ctx, segments.UserID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	res := &models.AddUserToSegmentResponse{}
-	res.UserID = segments.UserID
-	added, err := u.repo.AddUserToSegment(ctx, segments.UserID, segments.SegmentsToAdd)
+	err = u.repo.AddUserToSegment(ctx, segments.UserID, segments.SegmentsToAdd)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	removed, err := u.repo.DeleteUserFromSegments(ctx, segments.UserID, segments.SegmentsToDelete)
+	err = u.repo.DeleteUserFromSegments(ctx, segments.UserID, segments.SegmentsToDelete)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	res.AddedSegments = added
-	res.DeletedSegments = removed
-
-	return res, nil
+	return nil
 }
 
 func (u *UserSegment) GetActiveUserSegments(ctx context.Context, userID int) ([]string, error) {

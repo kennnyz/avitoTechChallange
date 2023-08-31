@@ -7,7 +7,7 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
-func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, userID int, segments []string) ([]string, error) {
+func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, userID int, segments []string) error {
 	res := []string{}
 
 	addQuery := "INSERT INTO user_segments (user_id, segment_name) VALUES ($1, $2) ON CONFLICT DO NOTHING"
@@ -25,14 +25,14 @@ func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, userID int, segm
 			logrus.Println("Error adding user to segment:", err)
 			check := u.CheckSegment(ctx, segmentName)
 			if check != nil {
-				return nil, check
+				return check
 			}
-			return nil, err
+			return err
 		}
 		if rw.RowsAffected() == 0 {
 			err = u.CheckSegment(ctx, segmentName)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			continue
 		}
@@ -46,10 +46,10 @@ func (u *UserSegmentRepo) AddUserToSegment(ctx context.Context, userID int, segm
 	}
 	u.db.SendBatch(ctx, batch)
 
-	return segments, nil
+	return nil
 }
 
-func (u *UserSegmentRepo) DeleteUserFromSegments(ctx context.Context, userId int, segments []string) ([]string, error) {
+func (u *UserSegmentRepo) DeleteUserFromSegments(ctx context.Context, userId int, segments []string) error {
 	history := []string{}
 	deleteQuery := "DELETE FROM user_segments WHERE user_id = $1 AND segment_name = $2"
 
@@ -64,7 +64,7 @@ func (u *UserSegmentRepo) DeleteUserFromSegments(ctx context.Context, userId int
 		rw, err := results.Exec()
 		if err != nil {
 			logrus.Println("Error removing user from segment:", err)
-			return nil, err
+			return err
 		}
 		if rw.RowsAffected() == 0 {
 			continue
@@ -81,11 +81,11 @@ func (u *UserSegmentRepo) DeleteUserFromSegments(ctx context.Context, userId int
 		_, err := results.Exec()
 		if err != nil {
 			logrus.Println("Error adding to history:", err, " segment: ", segmentName)
-			return nil, err
+			return err
 		}
 	}
 
-	return segments, nil
+	return nil
 }
 
 func (u *UserSegmentRepo) GetActiveUserSegments(ctx context.Context, userID int) ([]string, error) {

@@ -22,3 +22,8 @@ func (s *Server) Run() error {
 	logrus.Println("starting server at ", s.httpServer.Addr)
 	return s.httpServer.ListenAndServe()
 }
+
+func (s *Server) Shutdown() error {
+	logrus.Println("shutting down server at ", s.httpServer.Addr)
+	return s.httpServer.Shutdown(nil)
+}

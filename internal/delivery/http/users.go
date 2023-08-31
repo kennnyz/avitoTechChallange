@@ -49,14 +49,14 @@ func (h *Handler) addUserToSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.userSegmentService.AddUserToSegments(r.Context(), userData)
+	err = h.userSegmentService.AddUserToSegments(r.Context(), userData)
 	if err != nil {
 		m := models.ResponseMessage{Message: err.Error()}
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(m)
 		return
 	}
-	_ = json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(models.SucceedMessage)
 }
 
 // @Summary Get Active User Segments
