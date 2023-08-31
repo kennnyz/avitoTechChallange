@@ -37,7 +37,7 @@ func (h *Handler) Init(swaggerUrl string) http.Handler {
 	r.Delete("/delete-segment", h.deleteSegment)
 	r.Post("/add-user-to-segment", h.addUserToSegment)
 	r.Get("/active-user-segments", h.getActiveUserSegments)
-	r.Get("/get-history", h.getHistoryFile)
+	r.Get("/get-history", h.getHistoryLink)
 	r.Get("/tmp/*", h.getFile)
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(swaggerUrl)))
 

@@ -23,7 +23,7 @@ func ReadConfig() (*Config, error) {
 	cfg.DB.Dsn = os.Getenv("DB_DSN")
 	cfg.ServerAddr = os.Getenv("SERVER_ADDR")
 	cfg.SwaggerURL = os.Getenv("SWAGGER_URL")
-	cfg.HistoryFilesPath = os.Getenv("HISTORY_FILES_PATH")
+	cfg.HistoryFilesPath = "tmp/"
 
 	return &cfg, nil
 }

@@ -12,7 +12,17 @@ import (
 	"www.github.com/kennnyz/avitochallenge/internal/models"
 )
 
-func (h *Handler) getHistoryFile(w http.ResponseWriter, r *http.Request) {
+// @Summary Get link to download history file
+// @Description Get link to download history file
+// @Tags history
+// @Accept json
+// @Produce json
+// @Param input body models.GetHistoryRequest true "history info"
+// @Success 200 {object} models.ResponseMessage
+// @Failure 500 {object} models.ResponseMessage
+// @Failure default {object} models.ResponseMessage
+// @Router /get-history [get]
+func (h *Handler) getHistoryLink(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_ = json.NewEncoder(w).Encode(models.ResponseMessage{Message: models.MethodNotProvideErr.Error()})
@@ -48,6 +58,15 @@ func (h *Handler) getHistoryFile(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Summary Get history file
+// @Description Get history file
+// @Tags history
+// @Produce csv
+// @Success 200 "CSV file attachment"
+// @Failure 400 {object} models.ResponseMessage "Bad request"
+// @Failure 405 {object} models.ResponseMessage "Method not allowed"
+// @Failure 500 {object} models.ResponseMessage "Internal server error"
+// @Router /tmp/{file_name} [get]
 func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -56,7 +75,7 @@ func (h *Handler) getFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filename := path.Base(r.URL.Path)
-	filePath := filepath.Join(os.Getenv("HISTORY_FILES_PATH"), filename)
+	filePath := filepath.Join("tmp/", filename)
 
 	file, err := os.Open(filePath)
 	if err != nil {
