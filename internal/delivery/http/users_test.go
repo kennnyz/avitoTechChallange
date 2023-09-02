@@ -29,14 +29,10 @@ func TestAddUserToSegment(t *testing.T) {
 			testId: 1,
 			name:   "success",
 			mockBehavior: func(s *mock_http_delivery.MockUserSegmentService) {
-				s.EXPECT().AddUserToSegments(gomock.Any(), gomock.Any()).Return(&models.AddUserToSegmentResponse{
-					UserID:          1000,
-					AddedSegments:   []string{"segment1", "segment2"},
-					DeletedSegments: []string{"segment3"},
-				}, nil)
+				s.EXPECT().AddUserToSegments(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expectedStatusCode: 200,
-			expectedResponse:   `{"userid":1000,"added_segments":["segment1","segment2"],"deleted_segments":["segment3"]}`,
+			expectedResponse:   `{"message":"success"}`,
 			expectedBody:       `{"userid":1000,"segments_to_add":["segment1","segment2"],"segments_to_delete":["segment3"]}`,
 			expectedMethod:     http.MethodPost,
 			path:               "/add-user-to-segment",
@@ -65,9 +61,9 @@ func TestAddUserToSegment(t *testing.T) {
 			testId: 4,
 			name:   "user not found add user to segment",
 			mockBehavior: func(s *mock_http_delivery.MockUserSegmentService) {
-				s.EXPECT().AddUserToSegments(gomock.Any(), gomock.Any()).Return(nil, models.UserNotFoundErr)
+				s.EXPECT().AddUserToSegments(gomock.Any(), gomock.Any()).Return(models.UserNotFoundErr)
 			},
-			expectedStatusCode: 500,
+			expectedStatusCode: 404,
 			expectedResponse:   `{"message":"user not found"}`,
 			expectedBody:       `{"userid":1000,"segments_to_add":["segment1","segment2"],"segments_to_delete":["segment3"]}`,
 			expectedMethod:     http.MethodPost,
@@ -101,7 +97,7 @@ func TestAddUserToSegment(t *testing.T) {
 			mockBehavior: func(s *mock_http_delivery.MockUserSegmentService) {
 				s.EXPECT().GetActiveUserSegments(context.Background(), 1000).Return(nil, models.UserNotFoundErr)
 			},
-			expectedStatusCode: 500,
+			expectedStatusCode: 404,
 			expectedResponse:   `{"message":"user not found"}`,
 			expectedBody:       `{"userid":1000}`,
 			expectedMethod:     http.MethodGet,

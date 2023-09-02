@@ -110,6 +110,13 @@ func (h *Handler) getActiveUserSegments(w http.ResponseWriter, r *http.Request) 
 
 	segments, err := h.userSegmentService.GetActiveUserSegments(r.Context(), user.UserID)
 	if err != nil {
+		if errors.Is(err, models.UserNotFoundErr) {
+			m := models.ResponseMessage{Message: err.Error()}
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(m)
+			return
+		}
+
 		m := models.ResponseMessage{Message: err.Error()}
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(m)

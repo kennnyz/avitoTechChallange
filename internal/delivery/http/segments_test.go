@@ -136,10 +136,10 @@ func TestDeleteSegment(t *testing.T) {
 			testId:       1,
 			expectedBody: `{"name":"segment2"}`,
 			mockBehavior: func(s *mock_http_delivery.MockUserSegmentService) {
-				s.EXPECT().DeleteSegment(context.Background(), "segment2").Return(models.SegmentNotFoundErr("segment2"))
+				s.EXPECT().DeleteSegment(context.Background(), "segment2").Return(models.NewSegmentNotFoundErr("segment2"))
 			},
-			expectedStatusCode: 500,
-			expectedResponse:   `{"message":"segment segment2 not found"}`,
+			expectedStatusCode: 400,
+			expectedResponse:   `{"message":"segment not found, segment name segment2"}`,
 			expectedMethod:     http.MethodDelete,
 		},
 		{
